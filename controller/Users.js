@@ -71,45 +71,24 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// export const loginUser = async (req, res) => {
-//     try {
-//         const user = await UserModel.findAll({
-//             where: {
-//                 email: req.body.email
-//             }
-//         });
-//
-//         if (user.length === 0) {
-//             return res.status(400).json({ msg: "Email not found" });
-//         }
-//
-//         const match = await bcrypt.compare(req.body.password, user[0].password);
-//
-//         if (!match) {
-//             return res.status(400).json({ msg: "Wrong password" });
-//         }
-//
-//         const userId = user[0].id;
-//         const name = user[0].name;
-//         const email = user[0].email;
-//
-//         const accessToken = jwt.sign({ userId, name, email }, process.env.ACCESS_TOKEN_SECRET, {
-//             expiresIn: "30s"
-//         });
-//
-//         const refreshToken = jwt.sign({ userId, name, email }, process.env.REFRESH_TOKEN_SECRET, {
-//             expiresIn: "7d"
-//         });
-//
-//         await UserModel.update({ refreshToken: refreshToken }, {
-//             where: {
-//                 id: userId
-//             }
-//         });
-//
-//         res.cookie("refreshToken", refreshToken, {httpOnly: true, maxAge: 7*24*60*60*1000})
-//         res.status(200).json({ accessToken: accessToken, refreshToken: refreshToken });
-//     } catch (e) {
-//         res.status(400).json({ msg: "Error during login" });
-//     }
-// };
+
+export const logoutUser = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ msg: "Refresh token not found" });
+        }
+
+        // Perform any additional checks if needed, e.g., verifying the user's identity
+
+        // Clear the refresh token in the database
+        await UserModel.update({ refresh_token: null }, {
+            where: { refresh_token: refreshToken }
+        });
+
+        res.status(200).json({ msg: "Logged out successfully" });
+    } catch (error) {
+        res.status(500).json({ msg: "Internal server error" });
+    }
+};
