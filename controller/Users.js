@@ -1,7 +1,6 @@
 import UserModel from "../models/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
 
 export const getUsers = async (req, res) => {
     try {
@@ -77,21 +76,28 @@ export const logoutUser = async (req, res) => {
         const {refreshToken} = req.body;
 
         if (!refreshToken) {
-            return res.status(400).json({msg: "Refresh token not found"});
+            return res.status(400).json({error: "Refresh token not provided"});
         }
 
-        // Perform any additional checks if needed, e.g., verifying the user's identity
+        // Check if the user exists with the given refreshToken
+        const user = await UserModel.findOne(
+            {
+                where: {refresh_token: refreshToken}
+            });
 
-        // Clear the refresh token in the database
-        await UserModel.update({refresh_token: null}, {
-            where: {refresh_token: refreshToken}
-        });
+        if (!user) {
+            return res.status(404).json({message: "User not found"});
+        }
 
-        res.status(200).json({msg: "Logged out successfully"});
+        await user.update({refresh_token: null});
+
+        return res.status(200).json({message: "Logged out successfully"});
     } catch (error) {
-        res.status(500).json({msg: "Internal server error"});
+        console.error("Error in logoutUser:", error);
+        return res.status(500).json({message: "Internal server error"});
     }
 };
+
 
 export const getProfile = async (req, res) => {
     try {
@@ -103,7 +109,7 @@ export const getProfile = async (req, res) => {
         });
 
         if (!loggedInUser) {
-            return res.status(404).json({ msg: "Logged-in user not found" });
+            return res.status(404).json({msg: "Logged-in user not found"});
         }
 
         res.json({
@@ -112,6 +118,6 @@ export const getProfile = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching profile:", error);
-        res.status(500).json({ msg: "Internal server error" });
+        res.status(500).json({msg: "Internal server error"});
     }
 };
