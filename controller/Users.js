@@ -18,21 +18,34 @@ export const getUsers = async (req, res) => {
 }
 
 export const registerUser = async (req, res) => {
-    const {name, email, password, confirmPassword} = req.body
-    if (password !== confirmPassword) return res.status(400).json({msg: "Password and confirm password not match"})
-    const salt = await bcrypt.genSalt()
-    const hashedPassword = await bcrypt.hash(password, salt)
+    const { name, email, password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword) {
+        return res.status(400).json({ msg: "Password and confirm password do not match" });
+    }
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     try {
         await UserModel.create({
             name: name,
             email: email,
             password: hashedPassword
-        })
-        res.status(200).json({msg: "Register success"})
+        });
+
+        res.status(200).json({ msg: "Registration successful" });
     } catch (error) {
-        res.status(400).json({msg: "Something is wrong"})
+        // Handle specific errors
+        if (error.code === 11000) {
+            // Duplicate key error (e.g., email already exists)
+            return res.status(400).json({ msg: "Email already exists" });
+        }
+
+        // Handle other errors
+        res.status(400).json({ msg: "Registration failed due to an error" });
     }
-}
+};
 
 export const loginUser = async (req, res) => {
     try {
