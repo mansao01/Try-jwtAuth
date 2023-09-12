@@ -3,7 +3,6 @@ import db from './config/Database.js';
 import UserModel from './models/UserModel.js';
 import dotEnv from 'dotenv';
 import UserRoute from './routes/UserRoute.js';
-import cookieParser from "cookie-parser";
 dotEnv.config()
 const app = express();
 
